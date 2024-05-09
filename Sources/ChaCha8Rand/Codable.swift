@@ -8,7 +8,7 @@ extension ChaCha8Rand: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        let seed = try container.decode(ContiguousArray<UInt32>.self , forKey: .seed)
+        let seed = try container.decode(ContiguousArray<UInt32>.self, forKey: .seed)
         
         let counter = try container.decode(UInt32.self, forKey: .counter)
         
