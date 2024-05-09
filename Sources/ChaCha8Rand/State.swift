@@ -1,4 +1,3 @@
-
 struct State {
     private var v00: SIMD4<UInt32>
     private var v01: SIMD4<UInt32>
