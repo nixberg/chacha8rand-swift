@@ -1,4 +1,4 @@
-public struct ChaCha8Rand {
+public struct ChaCha8Rand: RandomNumberGenerator {
     private var buffer = ContiguousArray<UInt64>(repeating: 0, count: 32)
     
     var seed: ContiguousArray<UInt32>
