@@ -42,6 +42,7 @@ public struct ChaCha8Rand {
     }
     
     init?(seed: ContiguousArray<UInt32>, counter: UInt32, index: Int) {
+        endIndex = counter.endIndex
         guard
             seed.count == 8,
             (0...12).contains(counter),
@@ -53,7 +54,6 @@ public struct ChaCha8Rand {
         self.seed = seed
         self.counter = counter
         self.index = index
-        self.endIndex = counter.endIndex
         self.block()
     }
     
@@ -93,7 +93,7 @@ public struct ChaCha8Rand {
     
     mutating func block() {
         seed.withUnsafeBufferPointer { seed in
-            buffer.withUnsafeMutableBytes { buffer in
+            buffer.withUnsafeMutableBufferPointer { buffer in
                 var state = State(seed: seed, counter: counter)
                 state.permute()
                 state.finalize(into: buffer)

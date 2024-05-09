@@ -82,23 +82,23 @@ struct State {
     }
     
     @inline(__always)
-    consuming func finalize(into buffer: UnsafeMutableRawBufferPointer) {
-        buffer.storeWords(of: v00, toByteOffset: 000)
-        buffer.storeWords(of: v01, toByteOffset: 016)
-        buffer.storeWords(of: v02, toByteOffset: 032)
-        buffer.storeWords(of: v03, toByteOffset: 048)
-        buffer.storeWords(of: v04, toByteOffset: 064)
-        buffer.storeWords(of: v05, toByteOffset: 080)
-        buffer.storeWords(of: v06, toByteOffset: 096)
-        buffer.storeWords(of: v07, toByteOffset: 112)
-        buffer.storeWords(of: v08, toByteOffset: 128)
-        buffer.storeWords(of: v09, toByteOffset: 144)
-        buffer.storeWords(of: v10, toByteOffset: 160)
-        buffer.storeWords(of: v11, toByteOffset: 176)
-        buffer.storeWords(of: v12, toByteOffset: 192)
-        buffer.storeWords(of: v13, toByteOffset: 208)
-        buffer.storeWords(of: v14, toByteOffset: 224)
-        buffer.storeWords(of: v15, toByteOffset: 240)
+    consuming func finalize(into buffer: UnsafeMutableBufferPointer<UInt64>) {
+        buffer.store(v00, atIndex: 00)
+        buffer.store(v01, atIndex: 02)
+        buffer.store(v02, atIndex: 04)
+        buffer.store(v03, atIndex: 06)
+        buffer.store(v04, atIndex: 08)
+        buffer.store(v05, atIndex: 10)
+        buffer.store(v06, atIndex: 12)
+        buffer.store(v07, atIndex: 14)
+        buffer.store(v08, atIndex: 16)
+        buffer.store(v09, atIndex: 18)
+        buffer.store(v10, atIndex: 20)
+        buffer.store(v11, atIndex: 22)
+        buffer.store(v12, atIndex: 24)
+        buffer.store(v13, atIndex: 26)
+        buffer.store(v14, atIndex: 28)
+        buffer.store(v15, atIndex: 30)
     }
 }
 
@@ -133,10 +133,7 @@ extension SIMD2<UInt64> {
         self = unsafeBitCast(source, to: Self.self)
 #else
 #warning("Support for big-endian platforms is untested!")
-        self = Self(
-            Scalar(value.y) << 32 | Scalar(value.x),
-            Scalar(value.w) << 32 | Scalar(value.z)
-        )
+        self = unsafeBitCast(source[SIMD4(1, 0, 3, 2)], to: Self.self)
 #endif
     }
 }
@@ -148,13 +145,11 @@ extension SIMD4<UInt32> {
     }
 }
 
-extension UnsafeMutableRawBufferPointer {
+extension UnsafeMutableBufferPointer<UInt64> {
     @inline(__always)
-    fileprivate func storeWords(
-        of value: SIMD4<UInt32>,
-        toByteOffset offset: Int
-    ) {
-        self.storeBytes(of: SIMD2<UInt64>(value), toByteOffset: offset, as: SIMD2<UInt64>.self)
+    fileprivate func store(_ value: SIMD4<UInt32>, atIndex index: Int) {
+        let value = SIMD2<UInt64>(value)
+        self[index + 0] = value[0]
+        self[index + 1] = value[1]
     }
 }
- 
