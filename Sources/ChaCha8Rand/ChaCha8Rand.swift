@@ -57,6 +57,16 @@ public struct ChaCha8Rand: RandomNumberGenerator {
         self.block()
     }
     
+    private mutating func block() {
+        seed.withUnsafeBufferPointer { seed in
+            buffer.withUnsafeMutableBufferPointer { buffer in
+                var state = State(seed: seed, counter: counter)
+                state.permute()
+                state.finalize(into: buffer)
+            }
+        }
+    }
+    
     public mutating func next() -> UInt64 {
         assert((0...16).contains(counter) && counter.isMultiple(of: 4))
         assert(endIndex == 28 || endIndex == 32)
@@ -67,9 +77,7 @@ public struct ChaCha8Rand: RandomNumberGenerator {
         }
         
         defer { index &+= 1 }
-        return buffer.withUnsafeBufferPointer {
-            $0[index]
-        }
+        return buffer.withUnsafeBufferPointer({ $0[index] })
     }
     
     private mutating func refill() {
@@ -90,20 +98,10 @@ public struct ChaCha8Rand: RandomNumberGenerator {
         index = 0
         endIndex = counter.endIndex
     }
-    
-    mutating func block() {
-        seed.withUnsafeBufferPointer { seed in
-            buffer.withUnsafeMutableBufferPointer { buffer in
-                var state = State(seed: seed, counter: counter)
-                state.permute()
-                state.finalize(into: buffer)
-            }
-        }
-    }
 }
 
 extension UInt32 {
-    var endIndex: Int {
+    fileprivate var endIndex: Int {
         assert((0...12).contains(self))
         assert(self.isMultiple(of: 4))
         return self == 12 ? 28 : 32
@@ -112,13 +110,13 @@ extension UInt32 {
 
 extension UInt64 {
     @inline(__always)
-    var words: (UInt32, UInt32) {
+    fileprivate var words: (UInt32, UInt32) {
         (UInt32(truncatingIfNeeded: self), UInt32(truncatingIfNeeded: self >> 32))
     }
 }
 
 extension SystemRandomNumberGenerator {
-    static func next() -> UInt32 {
+    fileprivate static func next() -> UInt32 {
         var generator = Self()
         return generator.next()
     }
