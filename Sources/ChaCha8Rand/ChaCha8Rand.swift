@@ -11,7 +11,7 @@ public struct ChaCha8Rand {
         seed = ContiguousArray(unsafeUninitializedCapacity: 8) { seed, count in
             seed.initialize(repeating: 0)
             for index in seed.indices {
-                seed[index] = SystemRandomNumberGenerator.next() // TODO: fill(_:)
+                seed[index] = SystemRandomNumberGenerator.next()
             }
             count = 8
         }
@@ -46,7 +46,7 @@ public struct ChaCha8Rand {
             seed.count == 8,
             (0...12).contains(counter),
             counter.isMultiple(of: 4),
-            (0...counter.endIndex).contains(index)
+            (0...endIndex).contains(index)
         else {
             return nil
         }
