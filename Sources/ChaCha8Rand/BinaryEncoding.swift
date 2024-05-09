@@ -1,5 +1,5 @@
 extension ChaCha8Rand {
-    private static let header: UInt64 = 0x3a38616863616863 // "chacha8:" in LE byte-order
+    private static let header: UInt64 = 0x3a38616863616863 // "chacha8:" as little-endian integer
     
     public init?(decoding bytes: some Sequence<UInt8>) {
         guard let decoded = bytes.withContiguousStorageIfAvailable({
@@ -22,14 +22,11 @@ extension ChaCha8Rand {
         
         let seed = ContiguousArray<UInt32>(unsafeUninitializedCapacity: 8) { seed, count in
             seed.initialize(repeating: 0)
-            seed[0] = buffer.loadLittleEndianUInt32(fromByteOffset: 16)
-            seed[1] = buffer.loadLittleEndianUInt32(fromByteOffset: 20)
-            seed[2] = buffer.loadLittleEndianUInt32(fromByteOffset: 24)
-            seed[3] = buffer.loadLittleEndianUInt32(fromByteOffset: 28)
-            seed[4] = buffer.loadLittleEndianUInt32(fromByteOffset: 32)
-            seed[5] = buffer.loadLittleEndianUInt32(fromByteOffset: 36)
-            seed[6] = buffer.loadLittleEndianUInt32(fromByteOffset: 40)
-            seed[7] = buffer.loadLittleEndianUInt32(fromByteOffset: 44)
+            var offset = 16
+            for index in seed.indices {
+                seed[index] = buffer.loadLittleEndianUInt32(fromByteOffset: offset)
+                offset &+= 4
+            }
             count = 8
         }
         
