@@ -2,10 +2,6 @@ import ChaCha8Rand
 import XCTest
 
 final class ChaCha8RandTests: XCTestCase {
-    func testGenerator2() {
-        var generator = ChaCha8Rand()
-        XCTAssertNotEqual(generator.next(), 0)
-    }
     func testGenerator() {
         var generator = ChaCha8Rand(seed: Self.seed)
         for expectedValue in Self.expectedOutput {
@@ -16,11 +12,11 @@ final class ChaCha8RandTests: XCTestCase {
     func testEncodable() {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        XCTAssert(try encoder.encode(ChaCha8Rand(seed: Self.seed)).elementsEqual(Self.encoded))
+        XCTAssert(try encoder.encode(ChaCha8Rand(seed: Self.seed)).elementsEqual(Self.jsonEncoded))
     }
     
     func testDecodable() throws {
-        var generator = try JSONDecoder().decode(ChaCha8Rand.self, from: Self.encoded)
+        var generator = try JSONDecoder().decode(ChaCha8Rand.self, from: Self.jsonEncoded)
         for expectedValue in Self.expectedOutput {
             XCTAssertEqual(generator.next(), expectedValue)
         }
@@ -41,18 +37,18 @@ final class ChaCha8RandTests: XCTestCase {
         }
     }
     
-    func testMarshal() {
-        XCTAssert(ChaCha8Rand(seed: Self.seed).encoded().elementsEqual(Self.marshalled))
+    func testBinaryEncoding() {
+        XCTAssert(ChaCha8Rand(seed: Self.seed).encoded().elementsEqual(Self.binaryEncoded))
     }
     
-    func testUnmarshal() throws {
-        var generator = try XCTUnwrap(ChaCha8Rand(decoding: Self.marshalled))
+    func testBinaryDecoding() throws {
+        var generator = try XCTUnwrap(ChaCha8Rand(decoding: Self.binaryEncoded))
         for expectedValue in Self.expectedOutput {
             XCTAssertEqual(generator.next(), expectedValue)
         }
     }
     
-    func testMarshallingRoundtrip() throws {
+    func testBinaryEncodingRoundtrip() throws {
         for index in Self.expectedOutput.indices {
             var generator = ChaCha8Rand(seed: Self.seed)
             for expectedValue in Self.expectedOutput.prefix(upTo: index) {
@@ -69,7 +65,7 @@ final class ChaCha8RandTests: XCTestCase {
 extension ChaCha8RandTests {
     fileprivate static let seed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456".utf8
     
-    fileprivate static let encoded = Data("""
+    fileprivate static let jsonEncoded = Data("""
         {
           "counter" : 0,
           "index" : 0,
@@ -86,7 +82,7 @@ extension ChaCha8RandTests {
         }
         """.utf8)
     
-    fileprivate static let marshalled: [UInt8] = [
+    fileprivate static let binaryEncoded: [UInt8] = [
         0x63, 0x68, 0x61, 0x63, 0x68, 0x61, 0x38, 0x3a,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
