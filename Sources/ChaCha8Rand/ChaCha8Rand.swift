@@ -11,7 +11,8 @@ public struct ChaCha8Rand: RandomNumberGenerator {
         seed = ContiguousArray(unsafeUninitializedCapacity: 8) { seed, count in
             seed.initialize(repeating: 0)
             for index in seed.indices {
-                seed[index] = SystemRandomNumberGenerator.next()
+                var generator = SystemRandomNumberGenerator()
+                seed[index] = generator.next()
             }
             count = 8
         }
@@ -28,14 +29,14 @@ public struct ChaCha8Rand: RandomNumberGenerator {
         precondition(bytes.count == 32, "TODO")
         self.seed = ContiguousArray(unsafeUninitializedCapacity: 8) { seed, count in
             seed.initialize(repeating: 0)
-            seed[0] = bytes.loadLittleEndianUInt32(fromByteOffset: 00)
-            seed[1] = bytes.loadLittleEndianUInt32(fromByteOffset: 04)
-            seed[2] = bytes.loadLittleEndianUInt32(fromByteOffset: 08)
-            seed[3] = bytes.loadLittleEndianUInt32(fromByteOffset: 12)
-            seed[4] = bytes.loadLittleEndianUInt32(fromByteOffset: 16)
-            seed[5] = bytes.loadLittleEndianUInt32(fromByteOffset: 20)
-            seed[6] = bytes.loadLittleEndianUInt32(fromByteOffset: 24)
-            seed[7] = bytes.loadLittleEndianUInt32(fromByteOffset: 28)
+            seed[0] = bytes.loadUnaligned(fromByteOffset: 00, as: UInt32.self, endianess: .little)
+            seed[1] = bytes.loadUnaligned(fromByteOffset: 04, as: UInt32.self, endianess: .little)
+            seed[2] = bytes.loadUnaligned(fromByteOffset: 08, as: UInt32.self, endianess: .little)
+            seed[3] = bytes.loadUnaligned(fromByteOffset: 12, as: UInt32.self, endianess: .little)
+            seed[4] = bytes.loadUnaligned(fromByteOffset: 16, as: UInt32.self, endianess: .little)
+            seed[5] = bytes.loadUnaligned(fromByteOffset: 20, as: UInt32.self, endianess: .little)
+            seed[6] = bytes.loadUnaligned(fromByteOffset: 24, as: UInt32.self, endianess: .little)
+            seed[7] = bytes.loadUnaligned(fromByteOffset: 28, as: UInt32.self, endianess: .little)
             count = 8
         }
         self.block()
@@ -112,12 +113,5 @@ extension UInt64 {
     @inline(__always)
     fileprivate var words: (UInt32, UInt32) {
         (UInt32(truncatingIfNeeded: self), UInt32(truncatingIfNeeded: self >> 32))
-    }
-}
-
-extension SystemRandomNumberGenerator {
-    fileprivate static func next() -> UInt32 {
-        var generator = Self()
-        return generator.next()
     }
 }

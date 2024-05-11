@@ -1,33 +1,43 @@
+enum Endianess {
+    case big
+    case little
+    case native
+}
+
 extension UnsafeRawBufferPointer {
     @inline(__always)
-    func loadBigEndianUInt64(fromByteOffset offset: Int) -> UInt64 {
-        UInt64(bigEndian: self.loadUnaligned(fromByteOffset: offset, as: UInt64.self))
-    }
-    
-    @inline(__always)
-    func loadLittleEndianUInt32(fromByteOffset offset: Int) -> UInt32 {
-        UInt32(littleEndian: self.loadUnaligned(fromByteOffset: offset, as: UInt32.self))
-    }
-    
-    @inline(__always)
-    func loadLittleEndianUInt64(fromByteOffset offset: Int) -> UInt64 {
-        UInt64(littleEndian: self.loadUnaligned(fromByteOffset: offset, as: UInt64.self))
+    func loadUnaligned<T: FixedWidthInteger>(
+        fromByteOffset offset: Int = 0,
+        as type: T.Type,
+        endianess: Endianess
+    ) -> T {
+        let value = self.loadUnaligned(fromByteOffset: offset, as: type)
+        return switch endianess {
+        case .big:
+            T(bigEndian: value)
+        case .little:
+            T(littleEndian: value)
+        case .native:
+            value
+        }
     }
 }
 
 extension UnsafeMutableRawBufferPointer {
     @inline(__always)
-    func storeBigEndianBytes(of value: UInt64, toByteOffset offset: Int) {
-        self.storeBytes(of: value.bigEndian, toByteOffset: offset, as: UInt64.self)
-    }
-    
-    @inline(__always)
-    func storeLittleEndianBytes(of value: UInt32, toByteOffset offset: Int) {
-        self.storeBytes(of: value.littleEndian, toByteOffset: offset, as: UInt32.self)
-    }
-    
-    @inline(__always)
-    func storeLittleEndianBytes(of value: UInt64, toByteOffset offset: Int) {
-        self.storeBytes(of: value.littleEndian, toByteOffset: offset, as: UInt64.self)
+    func storeBytes<T: FixedWidthInteger>(
+        of value: T,
+        endianess: Endianess,
+        toByteOffset offset: Int = 0
+    ) {
+        let value = switch endianess {
+        case .big:
+            value.bigEndian
+        case .little:
+            value.littleEndian
+        case .native:
+            value
+        }
+        self.storeBytes(of: value, toByteOffset: offset, as: T.self)
     }
 }

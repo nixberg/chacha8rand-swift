@@ -13,18 +13,25 @@ extension ChaCha8Rand {
     public init?(decoding buffer: UnsafeRawBufferPointer) {
         precondition(buffer.count == 48, "TODO")
         
-        guard buffer.loadLittleEndianUInt64(fromByteOffset: 00) == Self.header else {
+        guard buffer.loadUnaligned(as: UInt64.self, endianess: .little) == Self.header else {
             return nil
         }
         
-        let (counter, index) = buffer.loadBigEndianUInt64(fromByteOffset: 08)
-            .quotientAndRemainder(dividingBy: 32)
+        let (counter, index) = buffer.loadUnaligned(
+            fromByteOffset: 08,
+            as: UInt64.self,
+            endianess: .big
+        ).quotientAndRemainder(dividingBy: 32)
         
         let seed = ContiguousArray<UInt32>(unsafeUninitializedCapacity: 8) { seed, count in
             seed.initialize(repeating: 0)
             var offset = 16
             for index in seed.indices {
-                seed[index] = buffer.loadLittleEndianUInt32(fromByteOffset: offset)
+                seed[index] = buffer.loadUnaligned(
+                    fromByteOffset: offset,
+                    as: UInt32.self,
+                    endianess: .little
+                )
                 offset &+= 4
             }
             count = 8
@@ -36,13 +43,14 @@ extension ChaCha8Rand {
     public func encode(into buffer: UnsafeMutableRawBufferPointer) {
         precondition(buffer.count == 48, "TODO")
         
-        buffer.storeLittleEndianBytes(of: Self.header, toByteOffset: 00)
+        buffer.storeBytes(of: Self.header, endianess: .little, toByteOffset: 00)
         
-        buffer.storeBigEndianBytes(of: UInt64(counter / 4) * 32 + UInt64(index), toByteOffset: 08)
+        let used = UInt64(counter / 4) * 32 + UInt64(index)
+        buffer.storeBytes(of: used, endianess: .big, toByteOffset: 08)
         
         var offset = 16
         for word in seed {
-            buffer.storeLittleEndianBytes(of: word, toByteOffset: offset)
+            buffer.storeBytes(of: word, endianess: .little, toByteOffset: offset)
             offset &+= 4
         }
     }
