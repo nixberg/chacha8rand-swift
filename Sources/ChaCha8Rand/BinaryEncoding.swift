@@ -23,18 +23,15 @@ extension ChaCha8Rand {
             endianess: .big
         ).quotientAndRemainder(dividingBy: 32)
         
-        let seed = ContiguousArray<UInt32>(unsafeUninitializedCapacity: 8) { seed, count in
-            seed.initialize(repeating: 0)
-            var offset = 16
-            for index in seed.indices {
-                seed[index] = buffer.loadUnaligned(
-                    fromByteOffset: offset,
-                    as: UInt32.self,
-                    endianess: .little
-                )
-                offset &+= 4
-            }
-            count = 8
+        var seed = ContiguousArray<UInt32>()
+        seed.reserveCapacity(8)
+        
+        for offset in stride(from: 16, to: 48, by: 4) {
+            seed.append(buffer.loadUnaligned(
+                fromByteOffset: offset,
+                as: UInt32.self,
+                endianess: .little
+            ))
         }
         
         self.init(seed: seed, counter: 4 * UInt32(counter), index: Int(index))
@@ -43,15 +40,16 @@ extension ChaCha8Rand {
     public func encode(into buffer: UnsafeMutableRawBufferPointer) {
         precondition(buffer.count == 48, "TODO")
         
-        buffer.storeBytes(of: Self.header, endianess: .little, toByteOffset: 00)
+        buffer.storeBytes(of: Self.header, endianess: .little)
         
-        let used = UInt64(counter / 4) * 32 + UInt64(index)
-        buffer.storeBytes(of: used, endianess: .big, toByteOffset: 08)
+        buffer.storeBytes(
+            of: UInt64(counter / 4) * 32 + UInt64(index),
+            endianess: .big,
+            toByteOffset: 08
+        )
         
-        var offset = 16
-        for word in seed {
+        for (word, offset) in zip(seed, stride(from: 16, to: 48, by: 4)) {
             buffer.storeBytes(of: word, endianess: .little, toByteOffset: offset)
-            offset &+= 4
         }
     }
     
